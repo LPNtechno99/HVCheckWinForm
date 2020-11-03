@@ -1,0 +1,11 @@
+D:\MyProject\Project ca nhan\HVCheck\HVCheck\HVCheck\bin\Debug\HVCheck.exe.config
+D:\MyProject\Project ca nhan\HVCheck\HVCheck\HVCheck\bin\Debug\HVCheck.exe
+D:\MyProject\Project ca nhan\HVCheck\HVCheck\HVCheck\bin\Debug\HVCheck.pdb
+D:\MyProject\Project ca nhan\HVCheck\HVCheck\HVCheck\obj\Debug\HVCheck.Form1.resources
+D:\MyProject\Project ca nhan\HVCheck\HVCheck\HVCheck\obj\Debug\HVCheck.frmKiemTraDuLieu.resources
+D:\MyProject\Project ca nhan\HVCheck\HVCheck\HVCheck\obj\Debug\HVCheck.Properties.Resources.resources
+D:\MyProject\Project ca nhan\HVCheck\HVCheck\HVCheck\obj\Debug\HVCheck.csproj.GenerateResource.cache
+D:\MyProject\Project ca nhan\HVCheck\HVCheck\HVCheck\obj\Debug\HVCheck.csproj.CoreCompileInputs.cache
+D:\MyProject\Project ca nhan\HVCheck\HVCheck\HVCheck\obj\Debug\HVCheck.exe
+D:\MyProject\Project ca nhan\HVCheck\HVCheck\HVCheck\obj\Debug\HVCheck.pdb
+D:\MyProject\Project ca nhan\HVCheck\HVCheck\HVCheck\obj\Debug\HVCheck.csprojAssemblyReference.cache
