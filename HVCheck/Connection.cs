@@ -415,23 +415,30 @@ namespace Visionscape.Extension
         }
         private void DisconnectJob()
         {
-            if (vsDevice != null)
+            try
             {
-                if (vsDevice.IsAnyInspectionRunning)
-                    vsDevice.StopAll();
-            }
-
-            if (jobStep != null)
-            {
-                while (jobStep.Count > 0)
+                if (vsDevice != null)
                 {
-                    jobStep.Remove(1);
+                    if (vsDevice.IsAnyInspectionRunning)
+                        vsDevice.StopAll();
                 }
-                jobStep = null;
+
+                if (jobStep != null)
+                {
+                    while (jobStep.Count > 0)
+                    {
+                        jobStep.Remove(1);
+                    }
+                    jobStep = null;
+                }
+                if (ConnectionEventCallback != null)
+                {
+                    ConnectionEventCallback.Invoke(Enum_ConnectionEvent.DISCONNECTED_JOB, null);
+                }
             }
-            if (ConnectionEventCallback != null)
+            catch
             {
-                ConnectionEventCallback.Invoke(Enum_ConnectionEvent.DISCONNECTED_JOB, null);
+                throw new NotImplementedException();
             }
         }
         private void DisconnectReport()

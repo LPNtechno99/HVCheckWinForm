@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using Visionscape.Extension;
 using HookKeyboard;
 using HVCheck.Models;
+using ActUtlTypeLib;
 
 namespace HVCheck
 {
@@ -27,11 +28,16 @@ namespace HVCheck
         public static List<DuLieuSoLuongDat> _listDuLieuSoLuongDat;
 
         DuLieuSanPham _dulieuSP = new DuLieuSanPham();
+        DanhSachDaiLy _dsDaiLy = new DanhSachDaiLy();
 
         ReceviedDataFromCamera _dataCamera = new ReceviedDataFromCamera();
         private int _soluongPass, _soluongFail;
         private RunMode _mode;
         Connection _cameraMV;
+
+        private bool _flagDatSoLuong;
+
+        ActUtlType Fx1s = new ActUtlType();
         public Form1()
         {
             InitializeComponent();
@@ -44,6 +50,9 @@ namespace HVCheck
             _listener = new LowLevelKeyboardListener();
             _listener.OnKeyPressed += _listener_OnKeyPressed;
             _listener.HookKeyboard();
+
+            Fx1s.ActLogicalStationNumber = 1;
+            Fx1s.Open();
         }
 
         private void _listener_OnKeyPressed(object sender, KeyPressedArgs e)
@@ -60,8 +69,8 @@ namespace HVCheck
         private void Form1_Load(object sender, EventArgs e)
         {
             getFileNames();
-            //_cameraMV = new Connection();
-            //_cameraMV.ConnectionEventCallback += _cameraMV_ConnectionEventCallback;
+            _cameraMV = new Connection();
+            _cameraMV.ConnectionEventCallback += _cameraMV_ConnectionEventCallback;
 
             cbbCheDoChay.Items.Add(RunMode.mode.NORMAL);
             cbbCheDoChay.Items.Add(RunMode.mode.CHECK);
@@ -69,7 +78,13 @@ namespace HVCheck
             cbbCheDoChay.SelectedIndex = 0;
 
             cbbTenDL.DataSource = SQLite.Instance().LayToanBoBangDanhSachDaiLy()[1];
-            
+
+            short data1, data2;
+            Fx1s.ReadDeviceBlock2("D1", 1, out data1);
+            txtTriggerDelay.Text = data1.ToString();
+
+            Fx1s.ReadDeviceBlock2("D3", 1, out data2);
+            txtRejectDelay.Text = data2.ToString();
         }
 
         private void _cameraMV_ConnectionEventCallback(Enum_ConnectionEvent e, object obj)
@@ -108,14 +123,14 @@ namespace HVCheck
                     this.Invoke(new Action(() =>
                     {
                         //Update Image
-                        // bufferView1.Buffer = report.Images[0];
+                        bufferView1.Buffer = report.Images[0];
 
                         //Update Tool Data
                         foreach (Visionscape.Communications.InspectionReportValue result in report.Results)
                         {
                             try
                             {
-                                if (result.NameSym == "Snapshot1.HiLevelTool1.OCRX1.OutStr")
+                                if (result.NameSym == "Snapshot1.OCRX1.OutStr")
                                 {
                                     _dataCamera.ReceviedString = result.AsString;
                                     lblChuoiNhan.Text = _dataCamera.ReceviedString;
@@ -131,11 +146,73 @@ namespace HVCheck
                         //Pass - Fail Processing
                         if (report.InspectionStats.Passed)
                         {
+                            if (_mode.RunModeCurrent == RunMode.mode.NORMAL)
+                            {
+                                _soluongPass++;
+                                _dataCamera.CounterPASS = _soluongPass;
 
+                                lblPassFail.Text = ReceviedDataFromCamera.Result.PASS.ToString();
+                                lblPassFail.BackColor = Color.Green;
+
+                                lblCounterPass.Text = _dataCamera.CounterPASS.ToString();
+                                lblCounter.Text = _dataCamera.CounterPASS.ToString();
+
+                                SQLite.Instance().ThemDuLieuSanPham(DateTime.Now.ToString("ddMMyyHHmmss"), DateTime.Now.ToString("dd/MM/yyyy"),
+                                    _dsDaiLy.MaDL, _dsDaiLy.TenDL, _dataCamera.ReceviedString);
+
+                                if (_soluongPass == int.Parse(numericUpDown1.Value.ToString()))
+                                {
+                                    if (MessageBox.Show("Đã chạy đủ số lượng", "Thông báo", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                                    {
+                                        btnChayDung.PerformClick();
+                                    }
+                                }
+                            }
+
+                            else if (_mode.RunModeCurrent == RunMode.mode.CHECK)
+                            {
+                                lblPassFail.Text = ReceviedDataFromCamera.Result.PASS.ToString();
+                                lblPassFail.BackColor = Color.Green;
+
+                                _dulieuSP = SQLite.Instance().LayDuLieuSanPham(_dataCamera.ReceviedString);
+                                frmCheck.lblChuoiNhan.Text = _dulieuSP.MaSP;
+                                frmCheck.lblMaDL.Text = _dulieuSP.MaDL;
+                                frmCheck.lblTenDL.Text = _dulieuSP.TenDL;
+                                frmCheck.lblNgayGioXuat.Text = _dulieuSP.Time;
+                                if (frmCheck.cbbChonDaiLy.SelectedItem.ToString() == _dulieuSP.TenDL)
+                                {
+                                    frmCheck.lblKetQua.Text = "KHỚP";
+                                    frmCheck.lblKetQua.BackColor = Color.Green;
+                                    frmCheck.lblTenDL.BackColor = Color.SeaGreen;
+                                    frmCheck.cbbChonDaiLy.BackColor = Color.SeaGreen;
+                                }
+                                else
+                                {
+                                    frmCheck.lblKetQua.Text = "KHÔNG KHỚP";
+                                    frmCheck.lblKetQua.BackColor = Color.Red;
+                                    frmCheck.lblTenDL.BackColor = Color.Red;
+                                    frmCheck.cbbChonDaiLy.BackColor = Color.Red;
+                                }
+                            }
                         }
                         else
                         {
+                            if (_mode.RunModeCurrent == RunMode.mode.NORMAL)
+                            {
+                                _soluongFail++;
+                                _dataCamera.CounterFAIL = _soluongFail;
 
+                                lblPassFail.Text = ReceviedDataFromCamera.Result.FAIL.ToString();
+                                lblPassFail.BackColor = Color.OrangeRed;
+
+                                lblCounterFail.Text = _dataCamera.CounterFAIL.ToString();
+                                lblCounterFail.Text = _dataCamera.CounterFAIL.ToString();
+                            }
+                            else if (_mode.RunModeCurrent == RunMode.mode.CHECK)
+                            {
+                                lblPassFail.Text = ReceviedDataFromCamera.Result.FAIL.ToString();
+                                lblPassFail.BackColor = Color.OrangeRed;
+                            }
                         }
 
                         //Save Image
@@ -196,15 +273,17 @@ namespace HVCheck
                 lblCheDoChay.Text = "Chế độ chạy " + _mode.RunModeCurrent;
                 lblCheDoChay.BackColor = Color.DeepSkyBlue;
                 lblF1.BackColor = Color.DeepSkyBlue;
+                btnChayDung.PerformClick();
                 frmCheck = new frmKiemTraDuLieu();
                 frmCheck.SuKienThayDoiCheDoChay += FrmCheck_SuKienThayDoiCheDoChay;
-                frmCheck.Show();
+                frmCheck.ShowDialog();
             }
         }
 
         private void FrmCheck_SuKienThayDoiCheDoChay()
         {
             cbbCheDoChay.SelectedIndex = 0;
+            btnChayDung.PerformClick();
             //cbbCheDoChay_SelectedIndexChanged(null, null);
         }
 
@@ -213,17 +292,32 @@ namespace HVCheck
         {
             if (!_flagChayDung)
             {
-                //_cameraMV.ConnectCamera(VisionDevice);
+                if (_mode.RunModeCurrent == RunMode.mode.NORMAL)
+                {
+                    if (int.Parse(numericUpDown1.Value.ToString()) == 0 || _flagDatSoLuong == false)
+                    {
+                        MessageBox.Show("Chưa đặt số lượng");
+                        numericUpDown1.Focus();
+                        return;
+                    }
+                }
+                _cameraMV.ConnectCamera(VisionDevice);
                 btnChayDung.Text = CameraState.STOP.ToString();
                 btnChayDung.BackColor = Color.OrangeRed;
                 _flagChayDung = true;
+                tabControl1.Enabled = false;
+                _dsDaiLy = SQLite.Instance().LayDaiLy(cbbTenDL.SelectedItem.ToString());
             }
             else
             {
-                //_cameraMV.DisconnectAll();
+                _cameraMV.DisconnectAll();
                 btnChayDung.Text = CameraState.RUN.ToString();
                 btnChayDung.BackColor = Color.Green;
                 _flagChayDung = false;
+                _soluongPass = 0;
+                _soluongFail = 0;
+                _flagDatSoLuong = false;
+                tabControl1.Enabled = true;
             }
         }
 
@@ -238,6 +332,18 @@ namespace HVCheck
             SQLite.Instance().ThemDaiLy(txtMaDL.Text.Trim(), txtTenDL.Text.Trim());
 
         }
+        private void btnDatSoLuong_Click(object sender, EventArgs e)
+        {
+            if(int.Parse(numericUpDown1.Value.ToString())==0)
+            {
+                MessageBox.Show("Số lượng đặt không thể bằng 0");
+                return;
+            }
+            SQLite.Instance().ThemDuLieuSoLuongDat(DateTime.Now.ToString("ddMMyyHHmmss"), DateTime.Now.ToString("dd/MM/yyyy"),
+                _dsDaiLy.MaDL, _dsDaiLy.TenDL, int.Parse(numericUpDown1.Value.ToString()));
+            _flagDatSoLuong = true;
+        }
+
         private void button6_Click(object sender, EventArgs e)
         {
             _soluongPass++;
@@ -256,7 +362,7 @@ namespace HVCheck
             frmCheck.lblMaDL.Text = _dulieuSP.MaDL;
             frmCheck.lblTenDL.Text = _dulieuSP.TenDL;
             frmCheck.lblNgayGioXuat.Text = _dulieuSP.Time;
-            if(frmCheck.cbbChonDaiLy.SelectedItem.ToString() == _dulieuSP.TenDL)
+            if (frmCheck.cbbChonDaiLy.SelectedItem.ToString() == _dulieuSP.TenDL)
             {
                 frmCheck.lblKetQua.Text = "KHỚP";
                 frmCheck.lblKetQua.BackColor = Color.Green;
@@ -267,6 +373,26 @@ namespace HVCheck
                 frmCheck.lblKetQua.BackColor = Color.Red;
             }
         }
+
+        private void btnLuuTriggerDelay_Click(object sender, EventArgs e)
+        {
+            short data = short.Parse(txtTriggerDelay.Text.Trim());
+            int result = Fx1s.SetDevice2("D1", data);
+            if (result == 0) MessageBox.Show("OK");
+        }
+
+        private void btnLuuRejectDelay_Click(object sender, EventArgs e)
+        {
+            short data = short.Parse(txtRejectDelay.Text.Trim());
+            int result = Fx1s.SetDevice2("D3", data);
+            if (result == 0) MessageBox.Show("OK");
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Fx1s.Close();
+        }
+
         private void button7_Click(object sender, EventArgs e)
         {
             _soluongFail++;

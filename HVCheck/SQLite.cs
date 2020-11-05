@@ -192,6 +192,40 @@ namespace HVCheck
             }
             else return null;
         }
+
+        public DanhSachDaiLy LayDaiLy(string tenDL)
+        {
+            DanhSachDaiLy dsDaiLy = new DanhSachDaiLy();
+            OpenConnection();
+            if (_SqliteConnected)
+            {
+                string query = "SELECT *FROM DanhSachDaiLy WHERE TenDL=@TenDL";
+                using (SQLiteCommand command = new SQLiteCommand(query, con))
+                {
+                    command.Parameters.AddWithValue("TenDL", tenDL);
+                    using (SQLiteDataReader reader = command.ExecuteReader())
+                    {
+                        try
+                        {
+                            while (reader.Read())
+                            {
+                                dsDaiLy.ID = reader.GetInt32(0);
+                                dsDaiLy.MaDL = reader.GetString(1);
+                                dsDaiLy.TenDL = reader.GetString(2);
+                            }
+                            CloseConnection();
+                        }
+                        catch (Exception ex)
+                        {
+                            CloseConnection();
+                            MessageBox.Show(ex.Message);
+                        }
+                    }
+                }
+                return dsDaiLy;
+            }
+            else return null;
+        }
         #endregion
 
         #region Thêm mới dữ liệu
@@ -225,7 +259,7 @@ namespace HVCheck
             OpenConnection();
             if (_SqliteConnected)
             {
-                string query = "INSERT INTO (TimeStamp,Time,MaDL,TenDL,SoLuongDat) VALUES "
+                string query = "INSERT INTO DuLieuSoLuongDat (TimeStamp,Time,MaDL,TenDL,SoLuongDat) VALUES "
                     + "(@TimeStamp,@Time,@MaDL,@TenDL,@SoLuongDat)";
                 try
                 {
@@ -254,8 +288,7 @@ namespace HVCheck
             OpenConnection();
             if (_SqliteConnected)
             {
-                string query = "INSERT INTO (TimeStamp,Time,MaDL,TenDL,MaSP) VALUES "
-                    + "(@TimeStamp,@Time,@MaDL,@TenDL,@MaSP)";
+                string query = "INSERT INTO DuLieuSanPham (TimeStamp,Time,MaDL,TenDL,MaSP) VALUES (@TimeStamp,@Time,@MaDL,@TenDL,@MaSP)";
                 try
                 {
                     using (SQLiteCommand command = new SQLiteCommand(query, con))
@@ -264,10 +297,8 @@ namespace HVCheck
                         command.Parameters.AddWithValue("Time", time);
                         command.Parameters.AddWithValue("MaDL", maDL);
                         command.Parameters.AddWithValue("TenDL", tenDL);
-                        command.Parameters.AddWithValue("SoLuongDat", maSP);
-                        int result = command.ExecuteNonQuery();
-                        if (result > 0)
-                            MessageBox.Show("OK");
+                        command.Parameters.AddWithValue("MaSP", maSP);
+                        command.ExecuteNonQuery();
                     }
                     CloseConnection();
                 }
