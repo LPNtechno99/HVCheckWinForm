@@ -17,3 +17,5 @@ D:\MyProject\Project ca nhan\HVCheck\HVCheck\HVCheck\bin\x86\Debug\stdole.dll
 D:\MyProject\Project ca nhan\HVCheck\HVCheck\HVCheck\obj\x86\Debug\HVCheck.csproj.CopyComplete
 D:\MyProject\Project ca nhan\HVCheck\HVCheck\HVCheck\obj\x86\Debug\HVCheck.exe
 D:\MyProject\Project ca nhan\HVCheck\HVCheck\HVCheck\obj\x86\Debug\HVCheck.pdb
+D:\MyProject\Project ca nhan\HVCheck\HVCheck\HVCheck\bin\x86\Debug\System.Data.SQLite.dll
+D:\MyProject\Project ca nhan\HVCheck\HVCheck\HVCheck\obj\x86\Debug\HVCheck.csprojAssemblyReference.cache

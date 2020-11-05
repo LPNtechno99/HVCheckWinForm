@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Visionscape.Extension;
+using HookKeyboard;
+using HVCheck.Models;
 
 namespace HVCheck
 {
@@ -17,16 +19,42 @@ namespace HVCheck
     {
         private string job_path = @"C:\Microscan\Vscape\Jobs\";
         private string VisionDevice = "";
+        public static LowLevelKeyboardListener _listener;
+        frmKiemTraDuLieu frmCheck;
+
+        public static List<DanhSachDaiLy> _listDanhSachDaiLy;
+        public static List<DuLieuSanPham> _listDuLieuSanPham;
+        public static List<DuLieuSoLuongDat> _listDuLieuSoLuongDat;
+
+        DuLieuSanPham _dulieuSP = new DuLieuSanPham();
+
         ReceviedDataFromCamera _dataCamera = new ReceviedDataFromCamera();
         private int _soluongPass, _soluongFail;
         private RunMode _mode;
-
         Connection _cameraMV;
         public Form1()
         {
             InitializeComponent();
 
+            _listDanhSachDaiLy = new List<DanhSachDaiLy>();
+            _listDuLieuSanPham = new List<DuLieuSanPham>();
+            _listDuLieuSoLuongDat = new List<DuLieuSoLuongDat>();
+
             _mode = new RunMode();
+            _listener = new LowLevelKeyboardListener();
+            _listener.OnKeyPressed += _listener_OnKeyPressed;
+            _listener.HookKeyboard();
+        }
+
+        private void _listener_OnKeyPressed(object sender, KeyPressedArgs e)
+        {
+            if (e.KeyPressed == System.Windows.Input.Key.F1)
+            {
+                if (cbbCheDoChay.SelectedIndex == 0)
+                {
+                    cbbCheDoChay.SelectedIndex = 1;
+                }
+            }
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -39,6 +67,9 @@ namespace HVCheck
             cbbCheDoChay.Items.Add(RunMode.mode.CHECK);
 
             cbbCheDoChay.SelectedIndex = 0;
+
+            cbbTenDL.DataSource = SQLite.Instance().LayToanBoBangDanhSachDaiLy()[1];
+            
         }
 
         private void _cameraMV_ConnectionEventCallback(Enum_ConnectionEvent e, object obj)
@@ -77,7 +108,7 @@ namespace HVCheck
                     this.Invoke(new Action(() =>
                     {
                         //Update Image
-                       // bufferView1.Buffer = report.Images[0];
+                        // bufferView1.Buffer = report.Images[0];
 
                         //Update Tool Data
                         foreach (Visionscape.Communications.InspectionReportValue result in report.Results)
@@ -157,42 +188,30 @@ namespace HVCheck
                 _mode.RunModeCurrent = RunMode.mode.NORMAL;
                 lblCheDoChay.Text = "Chế độ chạy " + _mode.RunModeCurrent;
                 lblCheDoChay.BackColor = Color.LimeGreen;
+                lblF1.BackColor = Color.LimeGreen;
             }
             else if (cbbCheDoChay.SelectedIndex == 1)
             {
                 _mode.RunModeCurrent = RunMode.mode.CHECK;
                 lblCheDoChay.Text = "Chế độ chạy " + _mode.RunModeCurrent;
                 lblCheDoChay.BackColor = Color.DeepSkyBlue;
-                frmKiemTraDuLieu frmCheck = new frmKiemTraDuLieu();
+                lblF1.BackColor = Color.DeepSkyBlue;
+                frmCheck = new frmKiemTraDuLieu();
                 frmCheck.SuKienThayDoiCheDoChay += FrmCheck_SuKienThayDoiCheDoChay;
-                frmCheck.ShowDialog();
+                frmCheck.Show();
             }
         }
 
         private void FrmCheck_SuKienThayDoiCheDoChay()
         {
             cbbCheDoChay.SelectedIndex = 0;
-            cbbCheDoChay_SelectedIndexChanged(null, null);
-        }
-
-        private void button6_Click(object sender, EventArgs e)
-        {
-            _soluongPass++;
-            _dataCamera.CounterPASS = _soluongPass;
-            _dataCamera.ReceviedString = "NamDepzai";
-
-            lblPassFail.Text = ReceviedDataFromCamera.Result.PASS.ToString();
-            lblPassFail.BackColor = Color.Green;
-            lblChuoiNhan.Text = _dataCamera.ReceviedString;
-
-            lblCounterPass.Text = _dataCamera.CounterPASS.ToString();
-            lblCounter.Text = _dataCamera.CounterPASS.ToString();
+            //cbbCheDoChay_SelectedIndexChanged(null, null);
         }
 
         bool _flagChayDung;
         private void btnChayDung_Click(object sender, EventArgs e)
         {
-            if(!_flagChayDung)
+            if (!_flagChayDung)
             {
                 //_cameraMV.ConnectCamera(VisionDevice);
                 btnChayDung.Text = CameraState.STOP.ToString();
@@ -208,6 +227,46 @@ namespace HVCheck
             }
         }
 
+        private void button9_Click(object sender, EventArgs e)
+        {
+            SQLite.Instance().CheckConnect();
+        }
+
+        private void btnLuu_Click(object sender, EventArgs e)
+        {
+
+            SQLite.Instance().ThemDaiLy(txtMaDL.Text.Trim(), txtTenDL.Text.Trim());
+
+        }
+        private void button6_Click(object sender, EventArgs e)
+        {
+            _soluongPass++;
+            _dataCamera.CounterPASS = _soluongPass;
+            _dataCamera.ReceviedString = "NamDepzai";
+
+            lblPassFail.Text = ReceviedDataFromCamera.Result.PASS.ToString();
+            lblPassFail.BackColor = Color.Green;
+            lblChuoiNhan.Text = _dataCamera.ReceviedString;
+
+            lblCounterPass.Text = _dataCamera.CounterPASS.ToString();
+            lblCounter.Text = _dataCamera.CounterPASS.ToString();
+
+            _dulieuSP = SQLite.Instance().LayDuLieuSanPham("12345676");
+            frmCheck.lblChuoiNhan.Text = _dulieuSP.MaSP;
+            frmCheck.lblMaDL.Text = _dulieuSP.MaDL;
+            frmCheck.lblTenDL.Text = _dulieuSP.TenDL;
+            frmCheck.lblNgayGioXuat.Text = _dulieuSP.Time;
+            if(frmCheck.cbbChonDaiLy.SelectedItem.ToString() == _dulieuSP.TenDL)
+            {
+                frmCheck.lblKetQua.Text = "KHỚP";
+                frmCheck.lblKetQua.BackColor = Color.Green;
+            }
+            else
+            {
+                frmCheck.lblKetQua.Text = "KHÔNG KHỚP";
+                frmCheck.lblKetQua.BackColor = Color.Red;
+            }
+        }
         private void button7_Click(object sender, EventArgs e)
         {
             _soluongFail++;
