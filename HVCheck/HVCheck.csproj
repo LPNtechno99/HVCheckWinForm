@@ -97,6 +97,12 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="frmDuLieu.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmDuLieu.designer.cs">
+      <DependentUpon>frmDuLieu.cs</DependentUpon>
+    </Compile>
     <Compile Include="frmKiemTraDuLieu.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -114,6 +120,9 @@
     <Compile Include="SQLite.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmDuLieu.resx">
+      <DependentUpon>frmDuLieu.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmKiemTraDuLieu.resx">
       <DependentUpon>frmKiemTraDuLieu.cs</DependentUpon>

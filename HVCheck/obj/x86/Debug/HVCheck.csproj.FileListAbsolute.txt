@@ -34,3 +34,18 @@ D:\Local Disk F_742018351\DU_AN_CA_NHAN\DU_AN_01\HVCheckWinForm 05112020\HVCheck
 D:\Local Disk F_742018351\DU_AN_CA_NHAN\DU_AN_01\HVCheckWinForm 05112020\HVCheck\obj\x86\Debug\HVCheck.csproj.GenerateResource.Cache
 D:\Local Disk F_742018351\DU_AN_CA_NHAN\DU_AN_01\HVCheckWinForm 05112020\HVCheck\obj\x86\Debug\HVCheck.exe
 D:\Local Disk F_742018351\DU_AN_CA_NHAN\DU_AN_01\HVCheckWinForm 05112020\HVCheck\obj\x86\Debug\HVCheck.pdb
+D:\MyProject\Project ca nhan\HVCheckWinForm\HVCheck\bin\x86\Debug\HVCheck.exe.config
+D:\MyProject\Project ca nhan\HVCheckWinForm\HVCheck\bin\x86\Debug\HVCheck.exe
+D:\MyProject\Project ca nhan\HVCheckWinForm\HVCheck\bin\x86\Debug\HVCheck.pdb
+D:\MyProject\Project ca nhan\HVCheckWinForm\HVCheck\bin\x86\Debug\System.Data.SQLite.dll
+D:\MyProject\Project ca nhan\HVCheckWinForm\HVCheck\bin\x86\Debug\stdole.dll
+D:\MyProject\Project ca nhan\HVCheckWinForm\HVCheck\obj\x86\Debug\HVCheck.Form1.resources
+D:\MyProject\Project ca nhan\HVCheckWinForm\HVCheck\obj\x86\Debug\HVCheck.frmKiemTraDuLieu.resources
+D:\MyProject\Project ca nhan\HVCheckWinForm\HVCheck\obj\x86\Debug\HVCheck.Properties.Resources.resources
+D:\MyProject\Project ca nhan\HVCheckWinForm\HVCheck\obj\x86\Debug\HVCheck.csproj.GenerateResource.cache
+D:\MyProject\Project ca nhan\HVCheckWinForm\HVCheck\obj\x86\Debug\HVCheck.csproj.CoreCompileInputs.cache
+D:\MyProject\Project ca nhan\HVCheckWinForm\HVCheck\obj\x86\Debug\HVCheck.csproj.CopyComplete
+D:\MyProject\Project ca nhan\HVCheckWinForm\HVCheck\obj\x86\Debug\HVCheck.exe
+D:\MyProject\Project ca nhan\HVCheckWinForm\HVCheck\obj\x86\Debug\HVCheck.pdb
+D:\MyProject\Project ca nhan\HVCheckWinForm\HVCheck\obj\x86\Debug\HVCheck.frmDuLieu.resources
+D:\MyProject\Project ca nhan\HVCheckWinForm\HVCheck\obj\x86\Debug\HVCheck.csprojAssemblyReference.cache

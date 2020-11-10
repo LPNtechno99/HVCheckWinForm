@@ -156,6 +156,33 @@ namespace HVCheck
             }
             else return null;
         }
+        /// <summary>
+        /// Tạo bảng cho form
+        /// </summary>
+        /// <param name="strquery"></param>
+        /// <returns></returns>
+        public DataTable TaoBang(string strquery)
+        {
+            try
+            {
+                OpenConnection();
+                DataTable dt = new DataTable();
+                using (SQLiteCommand command = new SQLiteCommand(strquery, con))
+                {
+                    using (SQLiteDataAdapter da = new SQLiteDataAdapter(command))
+                    {
+                        da.Fill(dt);
+                    }
+                }
+                CloseConnection();
+                return dt;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return null;
+            }
+        }
         public DuLieuSanPham LayDuLieuSanPham(string maSP)
         {
             DuLieuSanPham duLieuSanPham = new DuLieuSanPham();
@@ -232,14 +259,14 @@ namespace HVCheck
         public void ThemDaiLy(string maDL, string tenDL)
         {
             OpenConnection();
-            if(_SqliteConnected)
+            if (_SqliteConnected)
             {
                 string query = "INSERT INTO DanhSachDaiLy (MaDL,TenDL) VALUES (@MaDL,@TenDL)";
                 try
                 {
                     using (SQLiteCommand command = new SQLiteCommand(query, con))
                     {
-                        command.Parameters.AddWithValue("MaDL",maDL);
+                        command.Parameters.AddWithValue("MaDL", maDL);
                         command.Parameters.AddWithValue("TenDL", tenDL);
                         int result = command.ExecuteNonQuery();
                         if (result > 0)
@@ -312,6 +339,22 @@ namespace HVCheck
         #endregion
 
         #region Cập nhật dữ liệu
+        #endregion
+
+        #region Xóa Dữ Liệu
+        public void XoaTheoID(string query)
+        {
+            OpenConnection();
+            if (_SqliteConnected)
+            {
+                using (SQLiteCommand command = new SQLiteCommand(query, con))
+                {
+                    int res = command.ExecuteNonQuery();
+                    if (res > 0)
+                        MessageBox.Show("Xóa thành công");
+                }
+            }
+        }
         #endregion
     }
 }

@@ -68,9 +68,9 @@ namespace HVCheck
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            getFileNames();
-            _cameraMV = new Connection();
-            _cameraMV.ConnectionEventCallback += _cameraMV_ConnectionEventCallback;
+            //getFileNames();
+            //_cameraMV = new Connection();
+            //_cameraMV.ConnectionEventCallback += _cameraMV_ConnectionEventCallback;
 
             cbbCheDoChay.Items.Add(RunMode.mode.NORMAL);
             cbbCheDoChay.Items.Add(RunMode.mode.CHECK);
@@ -78,6 +78,10 @@ namespace HVCheck
             cbbCheDoChay.SelectedIndex = 0;
 
             cbbTenDL.DataSource = SQLite.Instance().LayToanBoBangDanhSachDaiLy()[1];
+            _dsDaiLy = SQLite.Instance().LayDaiLy(cbbTenDL.SelectedItem.ToString());
+            dvDSDaiLy.DataSource = SQLite.Instance().TaoBang("SELECT *FROM DanhSachDaiLy");
+
+            txtThuMucLuuAnh.Text = Properties.Settings.Default.PathLuuAnh;
 
             short data1, data2;
             Fx1s.ReadDeviceBlock2("D1", 1, out data1);
@@ -124,7 +128,6 @@ namespace HVCheck
                     {
                         //Update Image
                         bufferView1.Buffer = report.Images[0];
-
                         //Update Tool Data
                         foreach (Visionscape.Communications.InspectionReportValue result in report.Results)
                         {
@@ -207,11 +210,19 @@ namespace HVCheck
 
                                 lblCounterFail.Text = _dataCamera.CounterFAIL.ToString();
                                 lblCounterFail.Text = _dataCamera.CounterFAIL.ToString();
+
+                                string name = DateTime.Now.ToString("dd/MM/yy-HHmmssfff") + "_F";
+                                string imagePath = Properties.Settings.Default.PathLuuAnh + "\\NORMAL\\" + name + ".bmp";
+                                bufferView1.Buffer.SaveImage(imagePath, Visionscape.Steps.EnumImgFileType.ftWithGraphics);
                             }
                             else if (_mode.RunModeCurrent == RunMode.mode.CHECK)
                             {
                                 lblPassFail.Text = ReceviedDataFromCamera.Result.FAIL.ToString();
                                 lblPassFail.BackColor = Color.OrangeRed;
+
+                                string name = DateTime.Now.ToString("dd/MM/yy-HHmmssfff") + "_F";
+                                string imagePath = Properties.Settings.Default.PathLuuAnh + "\\CHECK\\" + name + ".bmp";
+                                bufferView1.Buffer.SaveImage(imagePath, Visionscape.Steps.EnumImgFileType.ftWithGraphics);
                             }
                         }
 
@@ -328,8 +339,16 @@ namespace HVCheck
 
         private void btnLuu_Click(object sender, EventArgs e)
         {
-
+            if(txtMaDL.Text.Trim() == "" || txtTenDL.Text.Trim()=="")
+            {
+                MessageBox.Show("Không được để trống");
+                return;
+            }
             SQLite.Instance().ThemDaiLy(txtMaDL.Text.Trim(), txtTenDL.Text.Trim());
+            txtMaDL.Text = "";
+            txtTenDL.Text = "";
+            txtMaDL.Focus();
+            dvDSDaiLy.DataSource = SQLite.Instance().TaoBang("SELECT *FROM DanhSachDaiLy");
 
         }
         private void btnDatSoLuong_Click(object sender, EventArgs e)
@@ -383,7 +402,7 @@ namespace HVCheck
 
         private void btnLuuRejectDelay_Click(object sender, EventArgs e)
         {
-            short data = short.Parse(txtRejectDelay.Text.Trim());
+            short data = (short)(short.Parse(txtRejectDelay.Text.Trim()) / 10);
             int result = Fx1s.SetDevice2("D3", data);
             if (result == 0) MessageBox.Show("OK");
         }
@@ -391,6 +410,31 @@ namespace HVCheck
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             Fx1s.Close();
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            frmDuLieu fm = new frmDuLieu();
+            fm.ShowDialog();
+        }
+
+        private void btnXoa_Click(object sender, EventArgs e)
+        {
+            int id = int.Parse(dvDSDaiLy.CurrentRow.Cells[0].FormattedValue.ToString());
+            SQLite.Instance().XoaTheoID("DELETE FROM DanhSachDaiLy WHERE ID='" + id + "'");
+            dvDSDaiLy.DataSource = SQLite.Instance().TaoBang("SELECT *FROM DanhSachDaiLy");
+        }
+
+        private void cbbTenDL_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _dsDaiLy = SQLite.Instance().LayDaiLy(cbbTenDL.SelectedItem.ToString());
+        }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.PathLuuAnh = txtThuMucLuuAnh.Text.Trim();
+            Properties.Settings.Default.Save();
+            System.Diagnostics.Process.Start("Explorer.exe", Properties.Settings.Default.PathLuuAnh);
         }
 
         private void button7_Click(object sender, EventArgs e)

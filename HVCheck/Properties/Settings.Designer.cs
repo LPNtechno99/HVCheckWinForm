@@ -22,5 +22,17 @@ namespace HVCheck.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("F:\\")]
+        public string PathLuuAnh {
+            get {
+                return ((string)(this["PathLuuAnh"]));
+            }
+            set {
+                this["PathLuuAnh"] = value;
+            }
+        }
     }
 }
