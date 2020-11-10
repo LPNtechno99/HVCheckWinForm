@@ -182,6 +182,8 @@ namespace HVCheck
                                 frmCheck.lblMaDL.Text = _dulieuSP.MaDL;
                                 frmCheck.lblTenDL.Text = _dulieuSP.TenDL;
                                 frmCheck.lblNgayGioXuat.Text = _dulieuSP.Time;
+                                frmCheck.lblKhoangThoiGian.Text = Convert.ToDateTime(DateTime.Now.ToString("dd/MM/yyyy"))
+                                .Subtract(Convert.ToDateTime(_dulieuSP.Time)).ToString("dd") + " ngày";
                                 if (frmCheck.cbbChonDaiLy.SelectedItem.ToString() == _dulieuSP.TenDL)
                                 {
                                     frmCheck.lblKetQua.Text = "KHỚP";
@@ -435,6 +437,14 @@ namespace HVCheck
             Properties.Settings.Default.PathLuuAnh = txtThuMucLuuAnh.Text.Trim();
             Properties.Settings.Default.Save();
             System.Diagnostics.Process.Start("Explorer.exe", Properties.Settings.Default.PathLuuAnh);
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            string date1 = "05/11/2020";
+            string date2 = DateTime.Now.ToString("dd/MM/yyyy");
+            string spantime = Convert.ToDateTime(date2).Subtract(Convert.ToDateTime(date1)).ToString("dd");
+            MessageBox.Show(spantime);
         }
 
         private void button7_Click(object sender, EventArgs e)
