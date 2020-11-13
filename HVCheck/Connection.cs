@@ -103,21 +103,28 @@ namespace Visionscape.Extension
         }
         public void ConnectReport()
         {
-            if (allReport == null)
+            try
             {
-                allReport = new ReportConnection();
-                allReport.NewReport += receivedReport_NewReport;
+                if (allReport == null)
+                {
+                    allReport = new ReportConnection();
+                    allReport.NewReport += receivedReport_NewReport;
+                }
+                allReport.Connect(vsDevice);
+
+                allReport.DropWhenBusy = false;
+                allReport.FreezeMode = ReportConnection.FreezeModeOptions.SHOW_ALL;
+
+                allReport.DataRecordAdd("Snapshot1.BufOut");
+
+                if (ConnectionEventCallback != null)
+                {
+                    ConnectionEventCallback.Invoke(Enum_ConnectionEvent.CONNECTED_REPORT, allReport);
+                }
             }
-            allReport.Connect(vsDevice);
-            
-            allReport.DropWhenBusy = false;
-            allReport.FreezeMode = ReportConnection.FreezeModeOptions.SHOW_ALL;
-
-            allReport.DataRecordAdd("Snapshot1.BufOut");
-
-            if (ConnectionEventCallback != null)
+            catch (Exception ex)
             {
-                ConnectionEventCallback.Invoke(Enum_ConnectionEvent.CONNECTED_REPORT, allReport);
+                throw new NotImplementedException(ex.Message);
             }
         }
         public void ConnectMultipleReport()

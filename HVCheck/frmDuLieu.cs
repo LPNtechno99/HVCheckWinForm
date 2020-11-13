@@ -48,5 +48,19 @@ namespace HVCheck
         {
             dvSoLuongDat.DataSource = SQLite.Instance().TaoBang("SELECT *FROM DuLieuSoLuongDat WHERE Time='"+dateTimePicker2.Value.ToString("dd/MM/yyyy")+"'");
         }
+
+        private void btnXuatExcel_Click(object sender, EventArgs e)
+        {
+            if (CameraState.Instance().CurrentState == CameraState.CameraStatus.STOP)
+            {
+                ExportToExcel ex = new ExportToExcel();
+                DataTable dt = (DataTable)dvDuLieuSanPham.DataSource;
+                ex.Export(dt, "Bao Cao", "Báo Cáo Chi Tiết");
+            }
+            else
+            {
+                MessageBox.Show("Phải DỪNG camera trước khi trích xuất dữ liệu ra Excel");
+            }
+        }
     }
 }

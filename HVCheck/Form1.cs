@@ -15,7 +15,7 @@ using ActUtlTypeLib;
 
 namespace HVCheck
 {
-    public enum CameraState { RUN, STOP }
+
     public partial class Form1 : Form
     {
         private string job_path = @"C:\Microscan\Vscape\Jobs\";
@@ -36,6 +36,8 @@ namespace HVCheck
         Connection _cameraMV;
 
         private bool _flagDatSoLuong;
+        public bool _statusPLC;
+        private string _stringOfToolVS = "";
 
         ActUtlType Fx1s = new ActUtlType();
         public Form1()
@@ -51,8 +53,6 @@ namespace HVCheck
             _listener.OnKeyPressed += _listener_OnKeyPressed;
             _listener.HookKeyboard();
 
-            Fx1s.ActLogicalStationNumber = 1;
-            Fx1s.Open();
         }
 
         private void _listener_OnKeyPressed(object sender, KeyPressedArgs e)
@@ -68,9 +68,9 @@ namespace HVCheck
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            //getFileNames();
-            //_cameraMV = new Connection();
-            //_cameraMV.ConnectionEventCallback += _cameraMV_ConnectionEventCallback;
+            getFileNames();
+            _cameraMV = new Connection();
+            _cameraMV.ConnectionEventCallback += _cameraMV_ConnectionEventCallback;
 
             cbbCheDoChay.Items.Add(RunMode.mode.NORMAL);
             cbbCheDoChay.Items.Add(RunMode.mode.CHECK);
@@ -82,13 +82,39 @@ namespace HVCheck
             dvDSDaiLy.DataSource = SQLite.Instance().TaoBang("SELECT *FROM DanhSachDaiLy");
 
             txtThuMucLuuAnh.Text = Properties.Settings.Default.PathLuuAnh;
+            _stringOfToolVS = Properties.Settings.Default.StringOfToolVS;
+            txtToolVS.Text = _stringOfToolVS;
 
-            short data1, data2;
-            Fx1s.ReadDeviceBlock2("D1", 1, out data1);
-            txtTriggerDelay.Text = data1.ToString();
+            Fx1s.ActLogicalStationNumber = 1;
+            int result = Fx1s.Open();
+            if (result != 0)
+            {
+                _statusPLC = false;
+                lblStatusPLC.Text = "PLC chưa kết nối";
+                lblStatusPLC.BackColor = Color.Red;
+                MessageBox.Show("Chưa kết nối PLC");
+            }
+            else
+            {
+                _statusPLC = true;
+                lblStatusPLC.Text = "PLC đã kết nối";
+                lblStatusPLC.BackColor = Color.Green;
+                MessageBox.Show("Kết nối PLC thành công");
+            }
+            try
+            {
+                short data1 = Properties.Settings.Default.TriggerDelay;
+                Fx1s.SetDevice2("D1", data1);
+                txtTriggerDelay.Text = data1.ToString();
 
-            Fx1s.ReadDeviceBlock2("D3", 1, out data2);
-            txtRejectDelay.Text = data2.ToString();
+                short data2 = Properties.Settings.Default.RejectDelay;
+                Fx1s.SetDevice2("D3", data2);
+                txtRejectDelay.Text = data2.ToString();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void _cameraMV_ConnectionEventCallback(Enum_ConnectionEvent e, object obj)
@@ -127,13 +153,18 @@ namespace HVCheck
                     this.Invoke(new Action(() =>
                     {
                         //Update Image
-                        bufferView1.Buffer = report.Images[0];
+                        bufferView2.Buffer = report.Images[0];
                         //Update Tool Data
                         foreach (Visionscape.Communications.InspectionReportValue result in report.Results)
                         {
                             try
                             {
-                                if (result.NameSym == "Snapshot1.OCRX1.OutStr")
+                                //if (result.NameSym == "Snapshot1.OCRX1.OutStr")
+                                //{
+                                //    _dataCamera.ReceviedString = result.AsString;
+                                //    lblChuoiNhan.Text = _dataCamera.ReceviedString;
+                                //}
+                                if (result.NameSym == _stringOfToolVS)
                                 {
                                     _dataCamera.ReceviedString = result.AsString;
                                     lblChuoiNhan.Text = _dataCamera.ReceviedString;
@@ -146,85 +177,148 @@ namespace HVCheck
                             }
                         }
 
-                        //Pass - Fail Processing
-                        if (report.InspectionStats.Passed)
+                        if (!chbChayTest.Checked)
                         {
-                            if (_mode.RunModeCurrent == RunMode.mode.NORMAL)
+                            //Pass - Fail Processing
+                            if (report.InspectionStats.Passed)
                             {
-                                _soluongPass++;
-                                _dataCamera.CounterPASS = _soluongPass;
-
-                                lblPassFail.Text = ReceviedDataFromCamera.Result.PASS.ToString();
-                                lblPassFail.BackColor = Color.Green;
-
-                                lblCounterPass.Text = _dataCamera.CounterPASS.ToString();
-                                lblCounter.Text = _dataCamera.CounterPASS.ToString();
-
-                                SQLite.Instance().ThemDuLieuSanPham(DateTime.Now.ToString("ddMMyyHHmmss"), DateTime.Now.ToString("dd/MM/yyyy"),
-                                    _dsDaiLy.MaDL, _dsDaiLy.TenDL, _dataCamera.ReceviedString);
-
-                                if (_soluongPass == int.Parse(numericUpDown1.Value.ToString()))
+                                if (_dataCamera.ReceviedString.Length == 10)
                                 {
-                                    if (MessageBox.Show("Đã chạy đủ số lượng", "Thông báo", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                                    if (_mode.RunModeCurrent == RunMode.mode.NORMAL)
                                     {
-                                        btnChayDung.PerformClick();
+                                        _soluongPass++;
+                                        _dataCamera.CounterPASS = _soluongPass;
+
+                                        lblPassFail.Text = ReceviedDataFromCamera.Result.PASS.ToString();
+                                        lblPassFail.BackColor = Color.Green;
+
+                                        lblCounterPass.Text = _dataCamera.CounterPASS.ToString();
+                                        lblCounter.Text = _dataCamera.CounterPASS.ToString();
+
+                                        SQLite.Instance().ThemDuLieuSanPham(DateTime.Now.ToString("ddMMyyyyHHmmss"), DateTime.Now.ToString("dd/MM/yyyy"),
+                                            _dsDaiLy.MaDL, _dsDaiLy.TenDL, _dataCamera.ReceviedString);
+
+                                        if (_soluongPass == int.Parse(numericUpDown1.Value.ToString()))
+                                        {
+                                            if (MessageBox.Show("Đã chạy đủ số lượng", "Thông báo", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                                            {
+                                                btnChayDung.PerformClick();
+                                            }
+                                        }
                                     }
-                                }
-                            }
 
-                            else if (_mode.RunModeCurrent == RunMode.mode.CHECK)
-                            {
-                                lblPassFail.Text = ReceviedDataFromCamera.Result.PASS.ToString();
-                                lblPassFail.BackColor = Color.Green;
+                                    else if (_mode.RunModeCurrent == RunMode.mode.CHECK)
+                                    {
+                                        lblPassFail.Text = ReceviedDataFromCamera.Result.PASS.ToString();
+                                        lblPassFail.BackColor = Color.Green;
 
-                                _dulieuSP = SQLite.Instance().LayDuLieuSanPham(_dataCamera.ReceviedString);
-                                frmCheck.lblChuoiNhan.Text = _dulieuSP.MaSP;
-                                frmCheck.lblMaDL.Text = _dulieuSP.MaDL;
-                                frmCheck.lblTenDL.Text = _dulieuSP.TenDL;
-                                frmCheck.lblNgayGioXuat.Text = _dulieuSP.Time;
-                                frmCheck.lblKhoangThoiGian.Text = Convert.ToDateTime(DateTime.Now.ToString("dd/MM/yyyy"))
-                                .Subtract(Convert.ToDateTime(_dulieuSP.Time)).ToString("dd") + " ngày";
-                                if (frmCheck.cbbChonDaiLy.SelectedItem.ToString() == _dulieuSP.TenDL)
-                                {
-                                    frmCheck.lblKetQua.Text = "KHỚP";
-                                    frmCheck.lblKetQua.BackColor = Color.Green;
-                                    frmCheck.lblTenDL.BackColor = Color.SeaGreen;
-                                    frmCheck.cbbChonDaiLy.BackColor = Color.SeaGreen;
+                                        _dulieuSP = SQLite.Instance().LayDuLieuSanPham(_dataCamera.ReceviedString);
+                                        frmCheck.lblChuoiNhan.Text = _dulieuSP.MaSP;
+                                        frmCheck.lblMaDL.Text = _dulieuSP.MaDL;
+                                        frmCheck.lblTenDL.Text = _dulieuSP.TenDL;
+                                        frmCheck.lblNgayGioXuat.Text = _dulieuSP.Time;
+                                        frmCheck.lblKhoangThoiGian.Text = Convert.ToDateTime(DateTime.Now.ToString("dd/MM/yyyy"))
+                                        .Subtract(Convert.ToDateTime(_dulieuSP.Time)).ToString("dd") + " ngày";
+                                        if (frmCheck.cbbChonDaiLy.SelectedItem.ToString() == _dulieuSP.TenDL)
+                                        {
+                                            frmCheck.lblKetQua.Text = "KHỚP";
+                                            frmCheck.lblKetQua.BackColor = Color.Green;
+                                            frmCheck.lblTenDL.BackColor = Color.SeaGreen;
+                                            frmCheck.cbbChonDaiLy.BackColor = Color.SeaGreen;
+                                        }
+                                        else
+                                        {
+                                            frmCheck.lblKetQua.Text = "KHÔNG KHỚP";
+                                            frmCheck.lblKetQua.BackColor = Color.Red;
+                                            frmCheck.lblTenDL.BackColor = Color.Red;
+                                            frmCheck.cbbChonDaiLy.BackColor = Color.Red;
+                                            Fx1s.SetDevice2("M2", 1);
+                                        }
+                                    }
                                 }
                                 else
                                 {
-                                    frmCheck.lblKetQua.Text = "KHÔNG KHỚP";
-                                    frmCheck.lblKetQua.BackColor = Color.Red;
-                                    frmCheck.lblTenDL.BackColor = Color.Red;
-                                    frmCheck.cbbChonDaiLy.BackColor = Color.Red;
+                                    if (_mode.RunModeCurrent == RunMode.mode.NORMAL)
+                                    {
+                                        _soluongFail++;
+                                        _dataCamera.CounterFAIL = _soluongFail;
+
+                                        lblPassFail.Text = ReceviedDataFromCamera.Result.FAIL.ToString();
+                                        lblPassFail.BackColor = Color.OrangeRed;
+
+                                        lblCounterFail.Text = _dataCamera.CounterFAIL.ToString();
+                                        lblCounterFail.Text = _dataCamera.CounterFAIL.ToString();
+
+                                        Fx1s.SetDevice2("M2", 1);
+
+                                        string name = DateTime.Now.ToString("dd/MM/yy-HHmmssfff") + "_F";
+                                        string imagePath = Properties.Settings.Default.PathLuuAnh + "\\NORMAL\\" + name + ".bmp";
+                                        bufferView2.Buffer.SaveImage(imagePath, Visionscape.Steps.EnumImgFileType.ftWithGraphics);
+                                    }
+                                    else if (_mode.RunModeCurrent == RunMode.mode.CHECK)
+                                    {
+                                        lblPassFail.Text = ReceviedDataFromCamera.Result.FAIL.ToString();
+                                        lblPassFail.BackColor = Color.OrangeRed;
+                                        Fx1s.SetDevice2("M2", 1);
+
+                                        string name = DateTime.Now.ToString("dd/MM/yy-HHmmssfff") + "_F";
+                                        string imagePath = Properties.Settings.Default.PathLuuAnh + "\\CHECK\\" + name + ".bmp";
+                                        bufferView2.Buffer.SaveImage(imagePath, Visionscape.Steps.EnumImgFileType.ftWithGraphics);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if (_mode.RunModeCurrent == RunMode.mode.NORMAL)
+                                {
+                                    _soluongFail++;
+                                    _dataCamera.CounterFAIL = _soluongFail;
+
+                                    lblPassFail.Text = ReceviedDataFromCamera.Result.FAIL.ToString();
+                                    lblPassFail.BackColor = Color.OrangeRed;
+
+                                    lblCounterFail.Text = _dataCamera.CounterFAIL.ToString();
+                                    lblCounterFail.Text = _dataCamera.CounterFAIL.ToString();
+
+                                    Fx1s.SetDevice2("M2", 1);
+
+                                    string name = DateTime.Now.ToString("dd/MM/yy-HHmmssfff") + "_F";
+                                    string imagePath = Properties.Settings.Default.PathLuuAnh + "\\NORMAL\\" + name + ".bmp";
+                                    bufferView2.Buffer.SaveImage(imagePath, Visionscape.Steps.EnumImgFileType.ftWithGraphics);
+                                }
+                                else if (_mode.RunModeCurrent == RunMode.mode.CHECK)
+                                {
+                                    lblPassFail.Text = ReceviedDataFromCamera.Result.FAIL.ToString();
+                                    lblPassFail.BackColor = Color.OrangeRed;
+                                    Fx1s.SetDevice2("M2", 1);
+
+                                    string name = DateTime.Now.ToString("dd/MM/yy-HHmmssfff") + "_F";
+                                    string imagePath = Properties.Settings.Default.PathLuuAnh + "\\CHECK\\" + name + ".bmp";
+                                    bufferView2.Buffer.SaveImage(imagePath, Visionscape.Steps.EnumImgFileType.ftWithGraphics);
                                 }
                             }
                         }
                         else
                         {
-                            if (_mode.RunModeCurrent == RunMode.mode.NORMAL)
+                            if (report.InspectionStats.Passed)
                             {
-                                _soluongFail++;
-                                _dataCamera.CounterFAIL = _soluongFail;
-
-                                lblPassFail.Text = ReceviedDataFromCamera.Result.FAIL.ToString();
-                                lblPassFail.BackColor = Color.OrangeRed;
-
-                                lblCounterFail.Text = _dataCamera.CounterFAIL.ToString();
-                                lblCounterFail.Text = _dataCamera.CounterFAIL.ToString();
-
-                                string name = DateTime.Now.ToString("dd/MM/yy-HHmmssfff") + "_F";
-                                string imagePath = Properties.Settings.Default.PathLuuAnh + "\\NORMAL\\" + name + ".bmp";
-                                bufferView1.Buffer.SaveImage(imagePath, Visionscape.Steps.EnumImgFileType.ftWithGraphics);
+                                if (_dataCamera.ReceviedString.Length == 10)
+                                {
+                                    lblPassFail.Text = ReceviedDataFromCamera.Result.PASS.ToString();
+                                    lblPassFail.BackColor = Color.Green;
+                                }
+                                else
+                                {
+                                    lblPassFail.Text = ReceviedDataFromCamera.Result.FAIL.ToString();
+                                    lblPassFail.BackColor = Color.OrangeRed;
+                                    Fx1s.SetDevice2("M2", 1);
+                                }
                             }
-                            else if (_mode.RunModeCurrent == RunMode.mode.CHECK)
+                            else
                             {
                                 lblPassFail.Text = ReceviedDataFromCamera.Result.FAIL.ToString();
                                 lblPassFail.BackColor = Color.OrangeRed;
-
-                                string name = DateTime.Now.ToString("dd/MM/yy-HHmmssfff") + "_F";
-                                string imagePath = Properties.Settings.Default.PathLuuAnh + "\\CHECK\\" + name + ".bmp";
-                                bufferView1.Buffer.SaveImage(imagePath, Visionscape.Steps.EnumImgFileType.ftWithGraphics);
+                                Fx1s.SetDevice2("M2", 1);
                             }
                         }
 
@@ -300,37 +394,63 @@ namespace HVCheck
             //cbbCheDoChay_SelectedIndexChanged(null, null);
         }
 
-        bool _flagChayDung;
+        public bool _flagChayDung;
         private void btnChayDung_Click(object sender, EventArgs e)
         {
-            if (!_flagChayDung)
+            if (!chbChayTest.Checked)
             {
-                if (_mode.RunModeCurrent == RunMode.mode.NORMAL)
+                if (!_flagChayDung)
                 {
-                    if (int.Parse(numericUpDown1.Value.ToString()) == 0 || _flagDatSoLuong == false)
+                    if (_mode.RunModeCurrent == RunMode.mode.NORMAL)
                     {
-                        MessageBox.Show("Chưa đặt số lượng");
-                        numericUpDown1.Focus();
-                        return;
+                        if (int.Parse(numericUpDown1.Value.ToString()) == 0 || _flagDatSoLuong == false)
+                        {
+                            MessageBox.Show("Chưa đặt số lượng");
+                            numericUpDown1.Focus();
+                            return;
+                        }
                     }
+                    _cameraMV.ConnectCamera(VisionDevice);
+                    btnChayDung.Text = CameraState.CameraStatus.STOP.ToString();
+                    CameraState.Instance().CurrentState = CameraState.CameraStatus.RUN;
+                    btnChayDung.BackColor = Color.OrangeRed;
+                    _flagChayDung = true;
+                    tabControl1.Enabled = false;
+
+                    _dsDaiLy = SQLite.Instance().LayDaiLy(cbbTenDL.SelectedItem.ToString());
                 }
-                _cameraMV.ConnectCamera(VisionDevice);
-                btnChayDung.Text = CameraState.STOP.ToString();
-                btnChayDung.BackColor = Color.OrangeRed;
-                _flagChayDung = true;
-                tabControl1.Enabled = false;
-                _dsDaiLy = SQLite.Instance().LayDaiLy(cbbTenDL.SelectedItem.ToString());
+                else
+                {
+                    _cameraMV.DisconnectAll();
+                    btnChayDung.Text = CameraState.CameraStatus.RUN.ToString();
+                    CameraState.Instance().CurrentState = CameraState.CameraStatus.STOP;
+                    btnChayDung.BackColor = Color.Green;
+                    _flagChayDung = false;
+                    _soluongPass = 0;
+                    _soluongFail = 0;
+                    _flagDatSoLuong = false;
+                    tabControl1.Enabled = true;
+
+                }
             }
             else
             {
-                _cameraMV.DisconnectAll();
-                btnChayDung.Text = CameraState.RUN.ToString();
-                btnChayDung.BackColor = Color.Green;
-                _flagChayDung = false;
-                _soluongPass = 0;
-                _soluongFail = 0;
-                _flagDatSoLuong = false;
-                tabControl1.Enabled = true;
+                if (!_flagChayDung)
+                {
+                    _cameraMV.ConnectCamera(VisionDevice);
+                    btnChayDung.Text = CameraState.CameraStatus.STOP.ToString();
+                    CameraState.Instance().CurrentState = CameraState.CameraStatus.RUN;
+                    btnChayDung.BackColor = Color.OrangeRed;
+                    _flagChayDung = true;
+                }
+                else
+                {
+                    _cameraMV.DisconnectAll();
+                    btnChayDung.Text = CameraState.CameraStatus.RUN.ToString();
+                    CameraState.Instance().CurrentState = CameraState.CameraStatus.STOP;
+                    btnChayDung.BackColor = Color.Green;
+                    _flagChayDung = false;
+                }
             }
         }
 
@@ -341,7 +461,7 @@ namespace HVCheck
 
         private void btnLuu_Click(object sender, EventArgs e)
         {
-            if(txtMaDL.Text.Trim() == "" || txtTenDL.Text.Trim()=="")
+            if (txtMaDL.Text.Trim() == "" || txtTenDL.Text.Trim() == "")
             {
                 MessageBox.Show("Không được để trống");
                 return;
@@ -355,7 +475,7 @@ namespace HVCheck
         }
         private void btnDatSoLuong_Click(object sender, EventArgs e)
         {
-            if(int.Parse(numericUpDown1.Value.ToString())==0)
+            if (int.Parse(numericUpDown1.Value.ToString()) == 0)
             {
                 MessageBox.Show("Số lượng đặt không thể bằng 0");
                 return;
@@ -399,19 +519,26 @@ namespace HVCheck
         {
             short data = short.Parse(txtTriggerDelay.Text.Trim());
             int result = Fx1s.SetDevice2("D1", data);
+            Properties.Settings.Default.TriggerDelay = data;
+            Properties.Settings.Default.Save();
             if (result == 0) MessageBox.Show("OK");
+            else MessageBox.Show("Không thành công, xem lại kết nối PLC!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
         private void btnLuuRejectDelay_Click(object sender, EventArgs e)
         {
             short data = (short)(short.Parse(txtRejectDelay.Text.Trim()) / 10);
             int result = Fx1s.SetDevice2("D3", data);
+            Properties.Settings.Default.RejectDelay = (short)(data * 10);
+            Properties.Settings.Default.Save();
             if (result == 0) MessageBox.Show("OK");
+            else MessageBox.Show("Không thành công, xem lại kết nối PLC!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             Fx1s.Close();
+            _cameraMV.DisconnectAll();
         }
 
         private void button4_Click(object sender, EventArgs e)
@@ -445,6 +572,31 @@ namespace HVCheck
             string date2 = DateTime.Now.ToString("dd/MM/yyyy");
             string spantime = Convert.ToDateTime(date2).Subtract(Convert.ToDateTime(date1)).ToString("dd");
             MessageBox.Show(spantime);
+        }
+
+        private void btnCheckPLC_Click(object sender, EventArgs e)
+        {
+            if(Fx1s.Open()!=0)
+            {
+                _statusPLC = false;
+                lblStatusPLC.Text = "PLC chưa kết nối";
+                lblStatusPLC.BackColor = Color.Red;
+                MessageBox.Show("Xem lại kết nối PLC!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            else
+            {
+                _statusPLC = true;
+                lblStatusPLC.Text = "PLC đã kết nối";
+                lblStatusPLC.BackColor = Color.Green;
+                MessageBox.Show("OK", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void btnSaveStringToolVS_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.StringOfToolVS = txtToolVS.Text.Trim();
+            Properties.Settings.Default.Save();
+            _stringOfToolVS = txtToolVS.Text.Trim();
         }
 
         private void button7_Click(object sender, EventArgs e)

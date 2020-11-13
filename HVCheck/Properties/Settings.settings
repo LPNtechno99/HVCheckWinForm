@@ -5,5 +5,14 @@
     <Setting Name="PathLuuAnh" Type="System.String" Scope="User">
       <Value Profile="(Default)">F:\</Value>
     </Setting>
+    <Setting Name="TriggerDelay" Type="System.Int16" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="RejectDelay" Type="System.Int16" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="StringOfToolVS" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Snapshot1.HiLevelTool1.BinMorph1.OCRTF1.OutStr</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
