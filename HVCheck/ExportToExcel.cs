@@ -188,11 +188,11 @@ namespace HVCheck
                 Microsoft.Office.Interop.Excel.Range c7 = oSheet.get_Range(c5, c6);
                 c7.NumberFormat = "MM/dd/yyyy";
 
-                //// định dạng ô timestamp thành kiểu dữ liệu dạng text
-                //Microsoft.Office.Interop.Excel.Range c8 = (Microsoft.Office.Interop.Excel.Range)oSheet.Cells[rowStart, columnStart + 1];
-                //Microsoft.Office.Interop.Excel.Range c9 = (Microsoft.Office.Interop.Excel.Range)oSheet.Cells[rowEnd, columnStart + 1];
-                //Microsoft.Office.Interop.Excel.Range c10 = oSheet.get_Range(c8, c9);
-                //c10.NumberFormat = "@";
+                // định dạng ô timestamp thành kiểu dữ liệu dạng số không có phần thập phân
+                Microsoft.Office.Interop.Excel.Range c8 = (Microsoft.Office.Interop.Excel.Range)oSheet.Cells[rowStart, columnStart + 1];
+                Microsoft.Office.Interop.Excel.Range c9 = (Microsoft.Office.Interop.Excel.Range)oSheet.Cells[rowEnd, columnStart + 1];
+                Microsoft.Office.Interop.Excel.Range c10 = oSheet.get_Range(c8, c9);
+                c10.NumberFormat = "0";
 
             }
             catch (Exception ex)

@@ -16,8 +16,8 @@ namespace HVCheck
     {
         public delegate void XulysukienThayDoiMode();
         public event XulysukienThayDoiMode SuKienThayDoiCheDoChay;
-        
 
+        public DuLieuSanPham _dulieuSP = new DuLieuSanPham();
         public frmKiemTraDuLieu()
         {
             InitializeComponent();
@@ -31,6 +31,13 @@ namespace HVCheck
             {
                 this.Close();
             }
+            else if(e.KeyPressed == System.Windows.Input.Key.F5)
+            {
+                if (chbNhapTay.Checked)
+                    chbNhapTay.Checked = false;
+                else
+                    chbNhapTay.Checked = true;
+            }
         }
 
         private void frmKiemTraDuLieu_Load(object sender, EventArgs e)
@@ -43,6 +50,60 @@ namespace HVCheck
         {
             if (SuKienThayDoiCheDoChay != null)
                 SuKienThayDoiCheDoChay.Invoke();
+        }
+
+        private void chbNhapTay_CheckedChanged(object sender, EventArgs e)
+        {
+            if(chbNhapTay.Checked)
+            {
+                txtMaNhapTay.Enabled = true;
+                btnKiemTra.Enabled = true;
+                txtMaNhapTay.Focus();
+            }
+            else
+            {
+                txtMaNhapTay.Enabled = false;
+                btnKiemTra.Enabled = false;
+            }
+        }
+
+        private void txtMaNhapTay_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.KeyCode == Keys.Enter)
+            {
+                btnKiemTra_Click(null, null);
+            }
+        }
+
+        private void btnKiemTra_Click(object sender, EventArgs e)
+        {
+            _dulieuSP = SQLite.Instance().LayDuLieuSanPham(txtMaNhapTay.Text.Trim());
+            lblChuoiNhan.Text = _dulieuSP.MaSP;
+            lblMaDL.Text = _dulieuSP.MaDL;
+            lblTenDL.Text = _dulieuSP.TenDL;
+            lblNgayGioXuat.Text = _dulieuSP.Time;
+            lblKhoangThoiGian.Text = Convert.ToDateTime(DateTime.Now.ToString("dd/MM/yyyy"))
+            .Subtract(Convert.ToDateTime(_dulieuSP.Time)).ToString("dd") + " ngày";
+            if (cbbChonDaiLy.SelectedItem.ToString() == _dulieuSP.TenDL)
+            {
+                lblKetQua.Text = "KHỚP";
+                lblKetQua.BackColor = Color.Green;
+                lblTenDL.BackColor = Color.SeaGreen;
+                cbbChonDaiLy.BackColor = Color.SeaGreen;
+            }
+            else
+            {
+                lblKetQua.Text = "KHÔNG KHỚP";
+                lblKetQua.BackColor = Color.Red;
+                lblTenDL.BackColor = Color.Red;
+                cbbChonDaiLy.BackColor = Color.Red;
+                Form1.Fx1s.SetDevice2("M2", 1);
+            }
+        }
+
+        private void cbbChonDaiLy_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            txtMaNhapTay.Focus();
         }
     }
 }

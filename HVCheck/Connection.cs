@@ -129,8 +129,6 @@ namespace Visionscape.Extension
         }
         public void ConnectMultipleReport()
         {
-
-
             IAvpCollection snapshotStepCol = jobStep.FindByType("Step.Snapshot.1");
             for (int i = 0; i < snapshotStepCol.Count; i++)
             {

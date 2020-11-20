@@ -27,8 +27,8 @@ namespace HVCheck
         public static List<DuLieuSanPham> _listDuLieuSanPham;
         public static List<DuLieuSoLuongDat> _listDuLieuSoLuongDat;
 
-        DuLieuSanPham _dulieuSP = new DuLieuSanPham();
-        DanhSachDaiLy _dsDaiLy = new DanhSachDaiLy();
+       public static DuLieuSanPham _dulieuSP = new DuLieuSanPham();
+       public static DanhSachDaiLy _dsDaiLy = new DanhSachDaiLy();
 
         ReceviedDataFromCamera _dataCamera = new ReceviedDataFromCamera();
         private int _soluongPass, _soluongFail;
@@ -39,7 +39,7 @@ namespace HVCheck
         public bool _statusPLC;
         private string _stringOfToolVS = "";
 
-        ActUtlType Fx1s = new ActUtlType();
+        public static ActUtlType Fx1s = new ActUtlType();
         public Form1()
         {
             InitializeComponent();
@@ -63,6 +63,11 @@ namespace HVCheck
                 {
                     cbbCheDoChay.SelectedIndex = 1;
                 }
+            }
+            else if(e.KeyPressed == System.Windows.Input.Key.F2)
+            {
+                frmNhapDuLieuBangTay fm = new frmNhapDuLieuBangTay();
+                fm.ShowDialog();
             }
         }
 
@@ -391,7 +396,6 @@ namespace HVCheck
         {
             cbbCheDoChay.SelectedIndex = 0;
             btnChayDung.PerformClick();
-            //cbbCheDoChay_SelectedIndexChanged(null, null);
         }
 
         public bool _flagChayDung;
@@ -482,6 +486,7 @@ namespace HVCheck
             }
             SQLite.Instance().ThemDuLieuSoLuongDat(DateTime.Now.ToString("ddMMyyHHmmss"), DateTime.Now.ToString("dd/MM/yyyy"),
                 _dsDaiLy.MaDL, _dsDaiLy.TenDL, int.Parse(numericUpDown1.Value.ToString()));
+
             _flagDatSoLuong = true;
         }
 
@@ -597,6 +602,20 @@ namespace HVCheck
             Properties.Settings.Default.StringOfToolVS = txtToolVS.Text.Trim();
             Properties.Settings.Default.Save();
             _stringOfToolVS = txtToolVS.Text.Trim();
+        }
+
+        private void label10_Click(object sender, EventArgs e)
+        {
+            frmNhapDuLieuBangTay fm = new frmNhapDuLieuBangTay();
+            fm.ShowDialog();
+        }
+
+        private void lblF1_Click(object sender, EventArgs e)
+        {
+            if (cbbCheDoChay.SelectedIndex == 0)
+            {
+                cbbCheDoChay.SelectedIndex = 1;
+            }
         }
 
         private void button7_Click(object sender, EventArgs e)

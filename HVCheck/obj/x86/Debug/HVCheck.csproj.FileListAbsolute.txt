@@ -74,3 +74,4 @@ D:\Local Disk F_742018351\DU_AN_CA_NHAN\DU_AN_01\HVCheckWinForm 10112020\HVCheck
 D:\Local Disk F_742018351\DU_AN_CA_NHAN\DU_AN_01\HVCheckWinForm 10112020\HVCheck\bin\x86\Debug\EntityFramework.SqlServer.xml
 D:\Local Disk F_742018351\DU_AN_CA_NHAN\DU_AN_01\HVCheckWinForm 10112020\HVCheck\bin\x86\Debug\System.Data.SQLite.xml
 D:\Local Disk F_742018351\DU_AN_CA_NHAN\DU_AN_01\HVCheckWinForm 10112020\HVCheck\obj\x86\Debug\HVCheck.csproj.ResolveComReference.cache
+D:\Local Disk F_742018351\DU_AN_CA_NHAN\DU_AN_01\HVCheckWinForm 10112020\HVCheck\obj\x86\Debug\HVCheck.frmNhapDuLieuBangTay.resources
